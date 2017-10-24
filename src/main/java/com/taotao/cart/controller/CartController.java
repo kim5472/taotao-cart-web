@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -109,6 +110,39 @@ public class CartController {
 		request.setAttribute("cartList", cartItemList);
 		// 返回逻辑视图
 		return "cart";
+	}
+	
+	/**
+	 * 购物车商品更新数量
+	 * @param itemId 商品id
+	 * @param num 修改的商品数量
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value="/cart/update/num/{itemId}/{num}",method=RequestMethod.POST)
+	@ResponseBody
+	public TaotaoResult updateItemNum(
+			@PathVariable Long itemId,
+			@PathVariable Integer num,
+			HttpServletRequest request,
+			HttpServletResponse response){
+		// 从cookie中获取购物车列表
+		List<TbItem> cartItemList = getCartItemList(request);
+		// 查询到对应的商品
+		for (TbItem tbItem : cartItemList) {
+			if (tbItem.getId()==itemId.longValue()) {
+				// 更新商品数量
+				tbItem.setNum(num);
+				break;
+			}
+		}
+		// 把购物车列表写入cookie
+		CookieUtils.setCookie(
+				request, response, CART_KEY, 
+				JsonUtils.objectToJson(cartItemList), CART_EXPIRE, true);
+		// 返回成功
+		return TaotaoResult.ok();
 	}
 	
 }
